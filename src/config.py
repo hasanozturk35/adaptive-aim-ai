@@ -35,6 +35,10 @@ MAX_DIFFICULTY = 1.0
 # Oyun Metrikleri
 INITIAL_SHOTS_TO_TRACK = 30  # Kaç atışın istatistiği tutulacak
 
+# Eğitim verisi: False -> atışlar oturumlar boyunca data/training_shots.csv'de birikir,
+# True -> oyun her açılışta dosyayı sıfırlar
+RESET_DATASET_ON_START = False
+
 # Force model seçimi (None veya 'logistic' / 'random_forest' / 'svm_rbf' / 'poly_logistic')
 # Force model choice: choose one of 'logistic', 'random_forest', 'svm_rbf', 'poly_logistic'
 # Set to 'random_forest' to prefer the Random Forest model from training metrics.

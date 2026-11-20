@@ -135,9 +135,8 @@ Kural tabanlı adaptif AI'nin yanında, hedef bir sınıflandırma modeliyle de 
 
 ### Akış
 
-1. **Veri toplama:** Oyun her atışı `data/training_shots.csv` dosyasına yazar (oyuncu/nişan konumu, açı, mesafe, hedefin konumu ve hızı, zorluk seviyesi, sonuç: `hit` / `miss`).
-   > Not: Oyun her açılışta bu dosyayı sıfırlar, yani dosya her zaman son oturumun verisini içerir.
-2. **Eğitim:** Bir oturum oynadıktan sonra:
+1. **Veri toplama:** Oyun her atışı `data/training_shots.csv` dosyasına yazar (oyuncu/nişan konumu, açı, mesafe, hedefin konumu ve hızı, zorluk seviyesi, sonuç: `hit` / `miss`). Veri oturumlar boyunca birikir; her satırda hangi oyun açılışından geldiğini gösteren bir `session_id` bulunur. Her açılışta sıfırdan başlamak için [config.py](src/config.py) içinde `RESET_DATASET_ON_START = True` yapın.
+2. **Eğitim:** Birkaç oturum oynadıktan sonra:
    ```bash
    python train.py
    ```
@@ -149,7 +148,7 @@ Kural tabanlı adaptif AI'nin yanında, hedef bir sınıflandırma modeliyle de 
 
    Modeller `models/` klasörüne kaydedilir, metrikler `models/metrics.json` dosyasına yazılır ve F1 skoru en yüksek olan `best_model.joblib` olarak kopyalanır.
 3. **Oyunda kullanım:** Oyun açılışta modeli yükler. Hangi modelin yükleneceği [config.py](src/config.py) içindeki `FORCE_MODEL` ile seçilir; `None` yapılırsa `best_model.joblib` kullanılır.
-4. **Oyun içi eğitim:** Her 10 atışta bir, o oturumun isabetli atışları ve rastgele üretilen sentetik ıskalar ile küçük bir Random Forest yeniden eğitilir (`models/online_rf.joblib`). Böylece model oyun sırasında da oyuncuya uyum sağlar.
+4. **Oyun içi eğitim:** Her 10 atışta bir, **sadece o oturumun** isabetli atışları ve rastgele üretilen sentetik ıskalar ile küçük bir Random Forest yeniden eğitilir (`models/online_rf.joblib`). Böylece oyun içi model o an oynayan oyuncuya uyum sağlarken, `train.py` birikmiş tüm veriyi kullanır.
 
 ### Sonuçlar
 
@@ -166,7 +165,7 @@ Repodaki modeller az sayıda atışla eğitildi (test seti: 52 atış). Atışla
 
 - **Veri çok az ve dengesiz.** Atışların büyük kısmı ıskalama; Random Forest'ın %85 accuracy'si sadece her atışa "ıska" demesinden geliyor (precision ve recall 0). Bu yüzden ana metrik olarak accuracy yerine F1 kullanıldı.
 - **AUC değerleri 0.5'e yakın**, yani modeller isabet ile ıskayı rastgele tahminden pek iyi ayıramıyor.
-- **İyileştirme için:** Birden fazla oturumun verisini biriktirmek (şu an her açılışta sıfırlanıyor), hedefin atış sonrası hareketini özellik olarak eklemek ve çapraz doğrulama ile değerlendirmek.
+- **İyileştirme için:** Oyun artık veriyi oturumlar boyunca biriktiriyor; daha fazla oynayıp `train.py` ile yeniden eğitmek ilk adım. Sonrasında hedefin atış sonrası hareketini özellik olarak eklemek ve oturum bazlı çapraz doğrulama (`session_id` ile) yapmak.
 
 ## 🧮 AI Öğrenme Matematikselliği
 

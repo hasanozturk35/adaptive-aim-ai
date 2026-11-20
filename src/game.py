@@ -50,12 +50,13 @@ class TargetingGame:
         self.player_stats = PlayerStats()
         # Data logger for training dataset
         self.data_logger = DataLogger()
-        # reset dataset now as requested by the user
-        try:
-            self.data_logger.reset_dataset()
-            print("Training dataset reset: {}".format(self.data_logger.filepath))
-        except Exception:
-            pass
+        # by default shots accumulate across sessions; set RESET_DATASET_ON_START to start fresh
+        if RESET_DATASET_ON_START:
+            try:
+                self.data_logger.reset_dataset()
+                print("Training dataset reset: {}".format(self.data_logger.filepath))
+            except Exception:
+                pass
         self.shot_counter = 0
         # pending_shots: shot_id -> shot_info dict until result
         self.pending_shots = {}
@@ -621,6 +622,9 @@ class TargetingGame:
                 reader = csv.DictReader(f)
                 for r in reader:
                     rows.append(r)
+
+            # online model adapts to the current player: use only this session's shots
+            rows = [r for r in rows if r.get('session_id') == self.data_logger.session_id]
 
             # take only hits
             hits = [r for r in rows if str(r.get('result','')).lower().strip() == 'hit']
