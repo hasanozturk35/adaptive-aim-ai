@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Oyun calisirken uretilen dosyalar
+data/training_shots.csv
+models/online_rf.joblib
