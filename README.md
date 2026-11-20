@@ -2,6 +2,10 @@
 
 Bir arcade tarzı oyunda, oyuncunun performansına dinamik olarak uyum sağlayan adaptif bir yapay zekaya sahip hedef kullanılan interaktif bir projedir.
 
+![Oyun ekranı](docs/screenshot.png)
+
+*Mavi: oyuncu, kırmızı: AI hedef. Sağ altta son atışlar ve modelin her atış için tahmin ettiği isabet olasılığı (p) görünür.*
+
 ## 🎮 Oyun Özellikleri
 
 ### Temel Mekanik
@@ -232,6 +236,10 @@ Bu oyun, adaptif zorluk seviyesi kullanan modern oyunların nasıl çalıştığ
 - Reinforcement Learning konseptleri
 - Adaptive AI davranışları
 - Dynamic difficulty adjustment
+
+## 📄 Lisans
+
+MIT, ayrıntılar için [LICENSE](LICENSE) dosyasına bakın.
 
 ---
 

@@ -1069,21 +1069,17 @@ class TargetingGame:
         
         for i, text in enumerate(controls):
             surface = self.small_font.render(text, True, GRAY)
-            self.screen.blit(surface, (10, SCREEN_HEIGHT - 35 + (i * 30)))
+            self.screen.blit(surface, (10, SCREEN_HEIGHT - 58 + (i * 26)))
 
         # Draw live model prediction on HUD
         if self.settings.get('show_predictions', True) and self.ml_model is not None:
             name = self.ml_model_name or 'model'
+            # indicate if FORCE_MODEL is being used (the in-game online model is never forced)
+            label = "Forced model" if FORCE_MODEL and name != 'online_rf.joblib' else "Model"
             if self.ml_model_metric is not None:
-                pred_text = f"Model: {name}  F1={self.ml_model_metric:.3f}"
+                pred_text = f"{label}: {name}  F1={self.ml_model_metric:.3f}"
             else:
-                pred_text = f"Model: {name}"
-            # indicate if FORCE_MODEL is being used
-            try:
-                if FORCE_MODEL:
-                    pred_text = f"Forced model: {name}"
-            except Exception:
-                pass
+                pred_text = f"{label}: {name}"
             # Draw highlighted background for visibility
             try:
                 surf = self.small_font.render(pred_text, True, WHITE)
