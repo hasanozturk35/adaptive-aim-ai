@@ -11,6 +11,9 @@ import math
 import time
 import threading
 
+# emojiler, çıktı dosyaya/boruya yönlendirildiğinde Windows kod sayfasında (cp1254) çökmesin
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 # src klasörünü path'e ekle
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
@@ -170,7 +173,7 @@ class SimpleTerminalGame:
                 
                 time.sleep(0.1)
         
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, EOFError):
             pass
         
         print("\n" + "=" * 100)
