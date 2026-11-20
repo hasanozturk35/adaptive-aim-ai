@@ -527,8 +527,7 @@ class TargetingGame:
                     # metrics keys are filenames
                     m = metrics.get(self.ml_model_name)
                     if m is not None:
-                        # prefer f1 then accuracy
-                        self.ml_model_metric = float(m.get('f1') or m.get('accuracy') or 0.0)
+                        self.ml_model_metric = float(m.get('f1', 0.0))
                     else:
                         # if best_model.json exists, try to read it
                         best_json = os.path.join(model_dir, 'best_model.json')
@@ -693,6 +692,10 @@ class TargetingGame:
             joblib.dump({'model': rf, 'scaler': scaler}, path)
             self.ml_model = rf
             self.ml_scaler = scaler
+            # online RF is trained on raw scaled features; drop any poly transform from the loaded model
+            self.ml_poly = None
+            self.ml_model_name = 'online_rf.joblib'
+            self.ml_model_metric = None
             print(f"Online retrain: trained RF with {n_pos} positives and saved to {path}")
             # Additionally, if there are recorded evade angles in CSV, train an
             # evade-direction classifier (discretized angles) so the AI can
@@ -1072,7 +1075,7 @@ class TargetingGame:
         if self.settings.get('show_predictions', True) and self.ml_model is not None:
             name = self.ml_model_name or 'model'
             if self.ml_model_metric is not None:
-                pred_text = f"Model: {name}  AUC={self.ml_model_metric:.3f}"
+                pred_text = f"Model: {name}  F1={self.ml_model_metric:.3f}"
             else:
                 pred_text = f"Model: {name}"
             # indicate if FORCE_MODEL is being used
