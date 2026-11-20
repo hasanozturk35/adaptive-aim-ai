@@ -74,6 +74,9 @@ learned_angles_to_avoid = {
 ### Kontroller:
 - **← → ↑ ↓**: Oyuncuyu hareket ettir
 - **Mouse Sol Tıklama (veya OK)**: Atış yap
+- **M**: Manuel hedefleme modunu aç/kapat
+- **W A S D**: Manuel modda nişangahı hareket ettir
+- **F**: Manuel modda nişangahın olduğu yere ateş et
 - **SPACE**: Oyunu durdur/devam ettir
 - **R**: Oyunu sıfırla
 - **ESC**: Çıkış
@@ -91,20 +94,24 @@ Hedefi mümkün olduğunca çok kez vur. Oyun arttıkça:
 oyun-makineogrenmesi/
 ├── README.md              # Bu dosya
 ├── requirements.txt       # Python bağımlılıkları
+├── main.py               # Oyunu başlatmak için
+├── train.py              # Toplanan veriyle ML modellerini eğitir
 ├── src/
 │   ├── config.py         # Oyun konfigürasyonu
 │   ├── player_stats.py   # Oyuncu istatistikleri ve analiz
 │   ├── ai_target.py      # Adaptif AI hedef sistemi
+│   ├── data_logger.py    # Her atışı CSV'ye kaydeder
+│   ├── model_select.py   # Oyunda kullanılacak modeli seçer
 │   └── game.py           # Ana oyun dosyası
-└── main.py               # Oyunu başlatmak için
+├── data/                 # training_shots.csv (oyun oynarken oluşur, repoda yok)
+└── models/               # Eğitilmiş modeller ve metrics.json
 ```
 
 ## 🚀 Başlangıç
 
 ### Gereksinimler:
-- Python 3.8+
-- pygame
-- numpy
+- Python 3.9+
+- pygame, numpy, scikit-learn, joblib (sürümler `requirements.txt` içinde)
 
 ### Kurulum:
 
@@ -117,6 +124,45 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+
+## 🤖 Makine Öğrenmesi: İsabet Tahmini
+
+Kural tabanlı adaptif AI'nin yanında, hedef bir sınıflandırma modeliyle de oyuncuya karşı savunma yapar: her atış anında model **"bu atış isabet eder mi?"** olasılığını tahmin eder. Tahmin yüksekse (> 0.5) hedef kaçma moduna geçer ve kaçınma gücü artar.
+
+### Akış
+
+1. **Veri toplama:** Oyun her atışı `data/training_shots.csv` dosyasına yazar (oyuncu/nişan konumu, açı, mesafe, hedefin konumu ve hızı, zorluk seviyesi, sonuç: `hit` / `miss`).
+   > Not: Oyun her açılışta bu dosyayı sıfırlar, yani dosya her zaman son oturumun verisini içerir.
+2. **Eğitim:** Bir oturum oynadıktan sonra:
+   ```bash
+   python train.py
+   ```
+   13 sayısal özellik üzerinde dört model eğitilir ve karşılaştırılır:
+   - Logistic Regression
+   - Random Forest
+   - SVM (RBF kernel)
+   - Polinom özellikler (derece 2) + Logistic Regression
+
+   Modeller `models/` klasörüne kaydedilir, metrikler `models/metrics.json` dosyasına yazılır ve F1 skoru en yüksek olan `best_model.joblib` olarak kopyalanır.
+3. **Oyunda kullanım:** Oyun açılışta modeli yükler. Hangi modelin yükleneceği [config.py](src/config.py) içindeki `FORCE_MODEL` ile seçilir; `None` yapılırsa `best_model.joblib` kullanılır.
+4. **Oyun içi eğitim:** Her 10 atışta bir, o oturumun isabetli atışları ve rastgele üretilen sentetik ıskalar ile küçük bir Random Forest yeniden eğitilir (`models/online_rf.joblib`). Böylece model oyun sırasında da oyuncuya uyum sağlar.
+
+### Sonuçlar
+
+Repodaki modeller az sayıda atışla eğitildi (test seti: 52 atış). Atışların ~%85'i ıskalama:
+
+| Model | Accuracy | Precision | Recall | F1 | ROC AUC |
+|---|---|---|---|---|---|
+| Logistic Regression | 0.56 | 0.17 | 0.57 | **0.26** | 0.55 |
+| Random Forest | 0.85 | 0.00 | 0.00 | 0.00 | 0.55 |
+| SVM (RBF) | 0.60 | 0.15 | 0.43 | 0.22 | 0.54 |
+| Polinom + Logistic | 0.63 | 0.13 | 0.29 | 0.17 | 0.45 |
+
+**Yorum:** Sonuçlar ön çalışma niteliğinde ve modeller henüz anlamlı bir tahmin gücüne sahip değil:
+
+- **Veri çok az ve dengesiz.** Atışların büyük kısmı ıskalama; Random Forest'ın %85 accuracy'si sadece her atışa "ıska" demesinden geliyor (precision ve recall 0). Bu yüzden ana metrik olarak accuracy yerine F1 kullanıldı.
+- **AUC değerleri 0.5'e yakın**, yani modeller isabet ile ıskayı rastgele tahminden pek iyi ayıramıyor.
+- **İyileştirme için:** Birden fazla oturumun verisini biriktirmek (şu an her açılışta sıfırlanıyor), hedefin atış sonrası hareketini özellik olarak eklemek ve çapraz doğrulama ile değerlendirmek.
 
 ## 🧮 AI Öğrenme Matematikselliği
 
