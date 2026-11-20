@@ -5,3 +5,13 @@ __pycache__/
 # Oyun calisirken uretilen dosyalar
 data/training_shots.csv
 models/online_rf.joblib
+
+# Gizli bilgi ve gereksiz dosya koruması
+.env
+.env.*
+!.env.example
+*.log
+*.bak
+*.backup_*
+*.pem
+*.key
